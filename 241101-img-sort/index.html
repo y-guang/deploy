@@ -5,176 +5,29 @@
     <title>My experiment</title>
     <script src="https://unpkg.com/jspsych@7.3.4"></script>
     <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.0.0"></script>
-    <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@2.0.0"></script>
     <script src="https://unpkg.com/@jspsych/plugin-preload@2.0.0"></script>
     <link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.2.1"></script>
+    <script src="natrual_merge_sort.min.js"></script>
+    <script src="util.js"></script>
 
+    <style>
+        body {
+            background-color: rgb(128, 128, 128);
+        }
+    </style>
 </head>
 
 <body></body>
+
 <script>
-
-    class MergeSort {
-        constructor(array) {
-            // Make a copy of the input array to avoid modifying the original
-            this.array = [...array];
-            this.length = array.length;
-
-            // Initialize state variables
-            this.mergeStack = [];
-            this.currentMerge = null;
-            this.isFinished = false;
-            this.lastYield = null;
-
-            // Handle empty array case immediately
-            if (this.length === 0) {
-                this.isFinished = true;
-                return;
-            }
-
-            // Initialize the merge stack with single-element subarrays
-            for (let i = 0; i < this.length; i++) {
-                this.mergeStack.push([this.array[i]]);
-            }
-        }
-
-        next() {
-            // If sorting is finished, return an elegant end signal
-            if (this.isFinished) {
-                return { done: true, result: this.array };
-            }
-
-            // If we need a new merge operation
-            if (!this.currentMerge) {
-                // If only one array remains, we're done
-                if (this.mergeStack.length === 1) {
-                    this.isFinished = true;
-                    this.array = this.mergeStack[0];
-                    return { done: true, result: this.array };
-                }
-
-                // Take two arrays from the stack to merge
-                const left = this.mergeStack.shift();
-                const right = this.mergeStack.shift();
-
-                this.currentMerge = {
-                    left,
-                    right,
-                    result: [],
-                    leftIndex: 0,
-                    rightIndex: 0
-                };
-            }
-
-            const { left, right, leftIndex, rightIndex } = this.currentMerge;
-
-            // If we've processed all elements in one of the arrays
-            if (leftIndex === left.length || rightIndex === right.length) {
-                // Add remaining elements from the other array
-                const remaining = leftIndex === left.length ?
-                    right.slice(rightIndex) :
-                    left.slice(leftIndex);
-
-                this.currentMerge.result.push(...remaining);
-
-                // Push merged array back to stack
-                this.mergeStack.push(this.currentMerge.result);
-                this.currentMerge = null;
-
-                // Continue with next comparison
-                return this.next();
-            }
-
-            // Store current comparison for update
-            this.lastYield = {
-                leftVal: left[leftIndex],
-                rightVal: right[rightIndex],
-                leftIndex,
-                rightIndex
-            };
-
-            // Return the pair to be compared
-            return {
-                done: false,
-                left: left[leftIndex],
-                right: right[rightIndex]
-            };
-        }
-
-        firstIsGreater(isGreater) {
-            if (this.isFinished) {
-                throw new Error("Sorting has already finished");
-            }
-
-            if (!this.lastYield) {
-                throw new Error("No comparison in progress");
-            }
-
-            const { leftVal, rightVal } = this.lastYield;
-
-            // Add the smaller element to the result array
-            if (!isGreater) {
-                this.currentMerge.result.push(leftVal);
-                this.currentMerge.leftIndex++;
-            } else {
-                this.currentMerge.result.push(rightVal);
-                this.currentMerge.rightIndex++;
-            }
-
-            this.lastYield = null;
-        }
-
-        // Helper method to get the final sorted array
-        getSortedArray() {
-            if (!this.isFinished) {
-                throw new Error("Sorting is not finished yet");
-            }
-            return this.array;
-        }
-    }
-
-    function shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-    }
-
-    function random_two_positions() {
-        // Generate first random angle between 0-360 degrees
-        const angle1 = Math.floor(Math.random() * 360);
-
-        // Generate second angle that's exactly 90-270 degrees clockwise from first angle
-        const offsetAngle = Math.floor(Math.random() * 180) + 90; // Random angle between 90-270 degrees
-        const angle2 = (angle1 + offsetAngle) % 360;
-
-        // Distance from center point (in viewport units)
-        const vh = window.innerHeight / 100;
-        const vw = window.innerWidth / 100;
-        const vmin = Math.min(vh, vw);
-        const distance = 25 * vmin;
-
-        // Convert polar coordinates to viewport coordinates (center is at 50vw, 50vh)
-        const x1 = distance * Math.cos(angle1 * Math.PI / 180) + 50 * vw;
-        const y1 = distance * Math.sin(angle1 * Math.PI / 180) + 50 * vh;
-        const x2 = distance * Math.cos(angle2 * Math.PI / 180) + 50 * vw;
-        const y2 = distance * Math.sin(angle2 * Math.PI / 180) + 50 * vh;
-
-        return [x1, y1, x2, y2];
-    }
-
-    function getElementCenter(element) {
-        const rect = element.getBoundingClientRect();
-        return {
-            x: rect.left + window.scrollX + rect.width / 2,
-            y: rect.top + window.scrollY + rect.height / 2
-        };
-    }
+    // status
+    var current_trial_type = "training_trial"
 
     // source
     var image_path_array = Array.from({ length: 5 }, (_, i) => `img/img${i}.jpg`);
     shuffle(image_path_array);
-    var image_sorter = new MergeSort(image_path_array);
+    var image_sorter = new NaturalMergeSort(image_path_array);
 
     /* initialize jsPsych */
     var jsPsych = initJsPsych({
@@ -189,32 +42,77 @@
     /* preload images */
     var preload = {
         type: jsPsychPreload,
-        images: [image_path_array]
+        images: image_path_array
     };
     timeline.push(preload);
 
     /* define welcome message trial */
     var welcome = {
         type: jsPsychHtmlKeyboardResponse,
-        stimulus: "Welcome to the experiment. Press any key to begin."
+        data: {
+            trial_class: "welcome"
+        },
+        stimulus: `
+        <p style="font-size: 4vh; line-height: 1.5; color: white;">
+            When we look at the world, our brain directs our eyes to certain areas or objects. This makes some items in the world stand out and immediately captures our attention, while ignoring the rest. For example, a red shirt among 20 black shirts, or a single cloud in a blue sky. 
+        </p>
+        <p style="font-size: 4vh; line-height: 1.5; color: white;">
+            You will be presented with 2 images. Select the image that stands out and grabs your attention. Be quick, as each presentation only last 200ms!
+        </p>
+        `
     };
-    timeline.push(welcome);
-
-
 
     /* define main_trial trial */
+    var before_trial_fixation = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `<div id="centre-cross" style="font-size: 10vh; position: absolute; top: 50vh; left: 50vw; transform: translate(-50%, -50%); user-select: none;" draggable="false">+</div>`,
+        choices: "NO_KEYS",
+        data: {
+            trial_class: "before_trial_fixation"
+        },
+        trial_duration: function () {
+            return Math.floor(Math.random() * 300) + 300;
+        }
+    };
+
     var main_trial = {
         type: jsPsychHtmlKeyboardResponse,
         choices: "NO_KEYS",
         stimulus: function () {
-            let next = image_sorter.next();
-            let { done, left, right } = next;
+            // determine left and right image
+            switch (current_trial_type) {
+                case "training_trial":
+                    let randomIndex = Math.floor(Math.random() * image_path_array.length);
+                    var left = image_path_array[randomIndex];
+                    let remainingArray = image_path_array.filter((_, index) => index !== randomIndex);
+                    var right = remainingArray[Math.floor(Math.random() * remainingArray.length)];
+                    break;
+                case "main_trial":
+                    var next = image_sorter.next();
+                    var left = next.left;
+                    var right = next.right;
+                    break;
+                case "repeat_trial":
+                    let trial_data = jsPsych.data.get().filter({ trial_class: "main_trial" }).trials
+                    let random_trial = trial_data[Math.floor(Math.random() * trial_data.length)];
+                    var left = random_trial.left;
+                    var right = random_trial.right;
+                    break
+                default:
+                    throw new Error("Invalid trial type");
+            }
+
             let position = random_two_positions();
             let [x1, y1, x2, y2] = position;
+
             html = `
-            <img id="left-img" src="${left}" style="position: absolute; top: ${y1}px; height: 28vh; left: ${x1}px; transform: translate(-50%, -50%);" draggable="false"></img>
-            <img id="right-img" src="${right}" style="position: absolute; top: ${y2}px; height: 28vh; left: ${x2}px; transform: translate(-50%, -50%);" draggable="false"></img>
-            <div id="centre-cross" style="font-size: 10vh; position: absolute; top: 50vh; left: 50vw; transform: translate(-50%, -50%);" draggable="false">+</div>
+            <div id="left-container" style="position: absolute; top: ${y1}px; left: ${x1}px; width: 26vh; height: 26vh; transform: translate(-50%, -50%);">
+            <img id="left-img" src="${left}" style="width: 100%; height: 100%; object-fit: contain; user-select: none;" draggable="false"/>
+            </div>
+            <div id="right-container" style="position: absolute; top: ${y2}px; left: ${x2}px; width: 26vh; height: 26vh; transform: translate(-50%, -50%);">
+            <img id="right-img" src="${right}" style="width: 100%; height: 100%; object-fit: contain; user-select: none;" draggable="false"/>
+            </div>
+            <div id="centre-cross" style="font-size: 10vh; position: absolute; top: 50vh; left: 50vw; transform: translate(-50%, -50%); user-select: none;" draggable="false">+</div>
             `
             return html
         },
@@ -231,14 +129,12 @@
                     // rt: performance.now() - startTime,
                     clicked: e.target.id,
                     rt: performance.now() - this.startTime,
-                    trial_class: "main_trial",
+                    trial_class: `${current_trial_type}`,
                 };
 
                 // record current left and right image
-                const next = image_sorter.next();
-                const { left, right } = next;
-                response.left = left;
-                response.right = right;
+                response.left = leftImg.src;
+                response.right = rightImg.src;
 
                 // record img position and cross abs position
                 response.left_position = getElementCenter(leftImg);
@@ -247,24 +143,35 @@
                 response.cross_position = getElementCenter(cross);
 
                 // update the sorter
-                image_sorter.firstIsGreater(e.target.id === 'left-img');
+                if (current_trial_type === "main_trial") {
+                    image_sorter.firstIsSmallerOrEqual(e.target.id === 'right-img');
+                }
 
                 // End trial
                 jsPsych.finishTrial(response);
             };
 
-            leftImg.addEventListener('click', handleClick);
-            rightImg.addEventListener('click', handleClick);
+            setTimeout(() => {
+                leftImg.addEventListener('click', handleClick);
+                rightImg.addEventListener('click', handleClick);
+                leftImg.style.opacity = 0;
+                rightImg.style.opacity = 0;
+                let leftContainer = document.getElementById('left-container');
+                let rightContainer = document.getElementById('right-container');
+                leftContainer.style.border = "5px solid black";
+                rightContainer.style.border = "5px solid black";
+            }, 200);
         },
         post_trial_gap: 0
     };
 
-
     var trial_loop = {
-        timeline: [main_trial],
+        timeline: [before_trial_fixation, main_trial],
+        on_start: function () {
+            current_trial_type = "main_trial";
+        },
         loop_function: function () {
-            let next = image_sorter.next();
-            if (next.done) {
+            if (image_sorter.finished) {
                 return false;
             } else {
                 return true;
@@ -272,7 +179,33 @@
         }
     };
 
-    timeline.push(trial_loop);
+    var training_loop = {
+        timeline: [before_trial_fixation, main_trial],
+        on_start: function () {
+            current_trial_type = "training_trial";
+        },
+        loop_function: function () {
+            if (jsPsych.data.get().filter({ trial_class: "training_trial" }).count() >= 2) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    };
+
+    var repeat_loop = {
+        timeline: [before_trial_fixation, main_trial],
+        on_start: function () {
+            current_trial_type = "repeat_trial";
+        },
+        loop_function: function () {
+            if (jsPsych.data.get().filter({ trial_class: "repeat_trial" }).count() >= 10) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    };
 
     var result_generate = {
         type: jsPsychHtmlKeyboardResponse,
@@ -280,7 +213,7 @@
         data: {
             trial_class: "generate_result",
             sorted_array: function () {
-                return image_sorter.getSortedArray();
+                return image_sorter.result;
             }
         },
         on_start: function () {
@@ -289,12 +222,11 @@
             }, 400);
         }
     }
-    timeline.push(result_generate);
 
     var result_display = {
         type: jsPsychHtmlKeyboardResponse,
         stimulus: function () {
-            let sorted_array = image_sorter.getSortedArray();
+            let sorted_array = image_sorter.result;
             return `
             ${sorted_array.join('<br>')}
             <p>Press any key to finish the experiment.</p>
@@ -320,7 +252,25 @@
             fetch("https://eoa19fdr5dl0c1e.m.pipedream.net", options)
         }
     };
+
+    var enter_fullscreen = {
+        type: jsPsychFullscreen,
+        fullscreen_mode: true
+    }
+
+    var exit_fullscreen = {
+        type: jsPsychFullscreen,
+        fullscreen_mode: false
+    }
+
+    timeline.push(welcome);
+    timeline.push(enter_fullscreen);
+    timeline.push(training_loop);
+    timeline.push(trial_loop);
+    timeline.push(repeat_loop);
+    timeline.push(result_generate);
     timeline.push(result_display);
+    timeline.push(exit_fullscreen);
 
     /* start the experiment */
     jsPsych.run(timeline);
