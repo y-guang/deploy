@@ -312,7 +312,7 @@
         stimulus: function () {
             let sorted_array = image_sorter.getSortedArray();
             return `
-            ${sorted_array.join('<br>')}
+            ${sorted_array.map((img) => `<img src="${img}" style="height: 10vh;">`).join(" ")} 
             <p>Press any key to finish the experiment.</p>
             `
         },
