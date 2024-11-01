@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>My experiment</title>
+    <script src="https://unpkg.com/jspsych@7.3.4"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@2.0.0"></script>
+    <link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.2.1"></script>
+    <script src="natrual_merge_sort.min.js"></script>
+    <script src="util.js"></script>
+
+    <style>
+        body {
+            background-color: rgb(128, 128, 128);
+        }
+    </style>
+</head>
+
+<body></body>
+
+<script>
+    // status
+    var current_trial_type = "training_trial"
+
+    // source
+    var image_path_array = ['./img/alco/knownAU/Alco_AmstelBot.png', './img/alco/knownAU/Alco_BacardiBot.png', './img/alco/knownAU/Alco_BacardiCola.png', './img/alco/knownAU/Alco_BacardiPinaColada.png', './img/alco/knownAU/Alco_BavariaBot.png', './img/alco/knownAU/Alco_BavariaCan.png', './img/alco/knownAU/Alco_BreezerLime.png', './img/alco/knownAU/Alco_BreezerOrang.png', './img/alco/knownAU/Alco_BreezerRed.png', './img/alco/knownAU/Alco_JohnnyWRed.png', './img/alco/knownAU/Alco_Martini.png', './img/alco/knownAU/Alco_ScotchBot.png', './img/alco/knownAU/Alco_Smirnoff.png', './img/alco/knownAU/Alco_SmirnoffApple.png', './img/alco/knownAU/Alco_SmirnoffIce.png', './img/alco/knownAU/Alco_barcadimojito.png', './img/alco/knownAU/Alco_beerbot.png', './img/alco/knownAU/Alco_cabmerlot.png', './img/alco/knownAU/Alco_cabsav.png', './img/alco/knownAU/Alco_champagne.png', './img/alco/knownAU/Alco_chardonnay.png', './img/alco/knownAU/Alco_gin.png', './img/alco/knownAU/Alco_heinekenBot.png', './img/alco/knownAU/Alco_prosecco.png', './img/alco/knownAU/Alco_prosecco2.png', './img/alco/knownAU/Alco_rose.png', './img/alco/knownAU/Alco_rose2.png', './img/alco/knownAU/Alco_tequila.png', './img/alco/knownAU/Alco_whitewine.png', './img/alco/knownAU/SDC11117.png', './img/alco/unknownAU/SDC10878.png', './img/alco/unknownAU/SDC10881.png', './img/alco/unknownAU/SDC10883.png', './img/alco/unknownAU/SDC10890.png', './img/alco/unknownAU/SDC11019.png', './img/alco/unknownAU/SDC11096.png', './img/alco/unknownAU/SDC11158.png', './img/alco/unknownAU/SDC11160.png', './img/alco/unknownAU/SDC11162.png', './img/non-alco/knownAU/non-alco_7UP.png', './img/non-alco/knownAU/non-alco_7UP2.png', './img/non-alco/knownAU/non-alco_AppleJuice.png', './img/non-alco/knownAU/non-alco_Coke.png', './img/non-alco/knownAU/non-alco_CokeCan.png', './img/non-alco/knownAU/non-alco_Evian.png', './img/non-alco/knownAU/non-alco_FantaBlue.png', './img/non-alco/knownAU/non-alco_FantaGrapeCan.png', './img/non-alco/knownAU/non-alco_FantaOrangeCan.png', './img/non-alco/knownAU/non-alco_FantaRed2.png', './img/non-alco/knownAU/non-alco_FantaYellow.png', './img/non-alco/knownAU/non-alco_Fantayellow2.png', './img/non-alco/knownAU/non-alco_IceTea.png', './img/non-alco/knownAU/non-alco_IceTea2.png', './img/non-alco/knownAU/non-alco_Kettle.png', './img/non-alco/knownAU/non-alco_MineralWater.png', './img/non-alco/knownAU/non-alco_MineralWater2.png', './img/non-alco/knownAU/non-alco_OrangeJuice.png', './img/non-alco/knownAU/non-alco_PepsiMax.png', './img/non-alco/knownAU/non-alco_PepsiMax2.png', './img/non-alco/knownAU/non-alco_SpaWater.png', './img/non-alco/knownAU/non-alco_Sprite.png', './img/non-alco/knownAU/non-alco_Sprite2.png', './img/non-alco/knownAU/non-alco_tea.png', './img/non-alco/unknownAU/SDC10732.png', './img/non-alco/unknownAU/SDC10733.png', './img/non-alco/unknownAU/SDC10734.png', './img/non-alco/unknownAU/SDC10847.png', './img/non-alco/unknownAU/SDC10848.png', './img/non-alco/unknownAU/SDC10850.png', './img/non-alco/unknownAU/SDC10851.png', './img/non-alco/unknownAU/SDC10959.png', './img/non-alco/unknownAU/SDC10977.png', './img/non-alco/unknownAU/SDC10982.png', './img/non-alco/unknownAU/SDC10986.png', './img/non-alco/unknownAU/SDC10989.png', './img/non-alco/unknownAU/SDC11004.png', './img/non-alco/unknownAU/SDC11030.png'] 
+    var image_sorter = new NaturalMergeSort(image_path_array);
+
+    /* initialize jsPsych */
+    var jsPsych = initJsPsych({
+        on_finish: function () {
+            jsPsych.data.displayData();
+        }
+    });
+
+    /* create timeline */
+    var timeline = [];
+
+    /* preload images */
+    var preload = {
+        type: jsPsychPreload,
+        images: image_path_array
+    };
+    timeline.push(preload);
+
+    /* define welcome message trial */
+    var welcome = {
+        type: jsPsychHtmlKeyboardResponse,
+        data: {
+            trial_class: "welcome"
+        },
+        stimulus: `
+        <p style="font-size: 4vh; line-height: 1.5; color: white;">
+            When we look at the world, our brain directs our eyes to certain areas or objects. This makes some items in the world stand out and immediately captures our attention, while ignoring the rest. For example, a red shirt among 20 black shirts, or a single cloud in a blue sky. 
+        </p>
+        <p style="font-size: 4vh; line-height: 1.5; color: white;">
+            You will be presented with 2 images. Select the image that stands out and grabs your attention. Be quick, as each presentation only last 200ms!
+        </p>
+        `
+    };
+
+    /* define main_trial trial */
+    var before_trial_fixation = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `<div id="centre-cross" style="font-size: 10vh; position: absolute; top: 50vh; left: 50vw; transform: translate(-50%, -50%); user-select: none;" draggable="false">+</div>`,
+        choices: "NO_KEYS",
+        data: {
+            trial_class: "before_trial_fixation"
+        },
+        trial_duration: function () {
+            return Math.floor(Math.random() * 300) + 300;
+        }
+    };
+
+    var main_trial = {
+        type: jsPsychHtmlKeyboardResponse,
+        choices: "NO_KEYS",
+        stimulus: function () {
+            // determine left and right image
+            switch (current_trial_type) {
+                case "training_trial":
+                    let randomIndex = Math.floor(Math.random() * image_path_array.length);
+                    var left = image_path_array[randomIndex];
+                    let remainingArray = image_path_array.filter((_, index) => index !== randomIndex);
+                    var right = remainingArray[Math.floor(Math.random() * remainingArray.length)];
+                    break;
+                case "main_trial":
+                    var next = image_sorter.next();
+                    var left = next.left;
+                    var right = next.right;
+                    break;
+                case "repeat_trial":
+                    let trial_data = jsPsych.data.get().filter({ trial_class: "main_trial" }).trials
+                    let random_trial = trial_data[Math.floor(Math.random() * trial_data.length)];
+                    var left = random_trial.left;
+                    var right = random_trial.right;
+                    break
+                default:
+                    throw new Error("Invalid trial type");
+            }
+
+            let position = random_two_positions();
+            let [x1, y1, x2, y2] = position;
+
+            html = `
+            <div id="left-container" style="position: absolute; top: ${y1}px; left: ${x1}px; width: 26vh; height: 26vh; transform: translate(-50%, -50%);">
+            <img id="left-img" src="${left}" style="width: 100%; height: 100%; object-fit: contain; user-select: none;" draggable="false"/>
+            </div>
+            <div id="right-container" style="position: absolute; top: ${y2}px; left: ${x2}px; width: 26vh; height: 26vh; transform: translate(-50%, -50%);">
+            <img id="right-img" src="${right}" style="width: 100%; height: 100%; object-fit: contain; user-select: none;" draggable="false"/>
+            </div>
+            <div id="centre-cross" style="font-size: 10vh; position: absolute; top: 50vh; left: 50vw; transform: translate(-50%, -50%); user-select: none;" draggable="false">+</div>
+            `
+            return html
+        },
+        on_start: function (trial) {
+            trial.startTime = performance.now();
+        },
+        on_load: function () {
+            const leftImg = document.getElementById('left-img');
+            const rightImg = document.getElementById('right-img');
+
+            const handleClick = (e) => {
+                // Get response data
+                const response = {
+                    // rt: performance.now() - startTime,
+                    clicked: e.target.id,
+                    rt: performance.now() - this.startTime,
+                    trial_class: `${current_trial_type}`,
+                };
+
+                // record current left and right image
+                response.left = leftImg.src;
+                response.right = rightImg.src;
+
+                // record img position and cross abs position
+                response.left_position = getElementCenter(leftImg);
+                response.right_position = getElementCenter(rightImg);
+                const cross = document.getElementById('centre-cross');
+                response.cross_position = getElementCenter(cross);
+
+                // update the sorter
+                if (current_trial_type === "main_trial") {
+                    image_sorter.firstIsSmallerOrEqual(e.target.id === 'right-img');
+                }
+
+                // End trial
+                jsPsych.finishTrial(response);
+            };
+
+            setTimeout(() => {
+                leftImg.addEventListener('click', handleClick);
+                rightImg.addEventListener('click', handleClick);
+                leftImg.style.opacity = 0;
+                rightImg.style.opacity = 0;
+                let leftContainer = document.getElementById('left-container');
+                let rightContainer = document.getElementById('right-container');
+                leftContainer.style.border = "5px solid black";
+                rightContainer.style.border = "5px solid black";
+            }, 200);
+        },
+        post_trial_gap: 0
+    };
+
+    var trial_loop = {
+        timeline: [before_trial_fixation, main_trial],
+        on_start: function () {
+            current_trial_type = "main_trial";
+        },
+        loop_function: function () {
+            if (image_sorter.finished) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    };
+
+    var training_loop = {
+        timeline: [before_trial_fixation, main_trial],
+        on_start: function () {
+            current_trial_type = "training_trial";
+        },
+        loop_function: function () {
+            if (jsPsych.data.get().filter({ trial_class: "training_trial" }).count() >= 2) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    };
+
+    var repeat_loop = {
+        timeline: [before_trial_fixation, main_trial],
+        on_start: function () {
+            current_trial_type = "repeat_trial";
+        },
+        loop_function: function () {
+            if (jsPsych.data.get().filter({ trial_class: "repeat_trial" }).count() >= 10) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    };
+
+    var result_generate = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: "Please wait...",
+        data: {
+            trial_class: "generate_result",
+            sorted_array: function () {
+                return image_sorter.result;
+            }
+        },
+        on_start: function () {
+            setTimeout(function () {
+                jsPsych.finishTrial({});
+            }, 400);
+        }
+    }
+
+    var result_display = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function () {
+            let sorted_array = image_sorter.result;
+            return `
+            ${sorted_array.join('<br>')}
+            <p>Press any key to finish the experiment.</p>
+            `
+        },
+        data: {
+            trial_class: "show_sorted"
+        },
+        on_start: function () {
+            // upload data to server
+            const headers = new Headers()
+            headers.append("Content-Type", "application/json")
+
+            const body = jsPsych.data.get().json()
+
+            const options = {
+                method: "POST",
+                headers,
+                mode: "cors",
+                body: JSON.stringify(body),
+            }
+
+            fetch("https://eoa19fdr5dl0c1e.m.pipedream.net", options)
+        }
+    };
+
+    var enter_fullscreen = {
+        type: jsPsychFullscreen,
+        fullscreen_mode: true
+    }
+
+    var exit_fullscreen = {
+        type: jsPsychFullscreen,
+        fullscreen_mode: false
+    }
+
+    timeline.push(welcome);
+    timeline.push(enter_fullscreen);
+    timeline.push(training_loop);
+    timeline.push(trial_loop);
+    timeline.push(repeat_loop);
+    timeline.push(result_generate);
+    timeline.push(result_display);
+    timeline.push(exit_fullscreen);
+
+    /* start the experiment */
+    jsPsych.run(timeline);
+
+</script>
+
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>My experiment</title>
+    <script src="https://unpkg.com/jspsych@7.3.4"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@2.0.0"></script>
+    <link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.2.1"></script>
+    <script src="natrual_merge_sort.min.js"></script>
+    <script src="util.js"></script>
+
+    <style>
+        body {
+            background-color: rgb(128, 128, 128);
+        }
+    </style>
+</head>
+
+<body></body>
+
+<script>
+    // status
+    var current_trial_type = "training_trial"
+
+    // source
+    var image_path_array = ['./img/al_pass_bot_cor.JPG', './img/al_pass_bot_crl.JPG', './img/al_pass_bot_jrw.JPG', './img/al_pass_bot_lww.JPG', './img/al_pass_bot_sac.JPG', './img/al_pass_bot_sdb.JPG', './img/al_pass_bot_too.JPG', './img/al_pass_bot_vbt.JPG', './img/al_pass_bot_xxx.JPG', './img/na_pass_bot_boo.JPG', './img/na_pass_bot_cke.JPG', './img/na_pass_bot_dfm.JPG', './img/na_pass_bot_gta.JPG', './img/na_pass_bot_mtf.JPG', './img/na_pass_bot_psi.JPG', './img/na_pass_bot_tea.JPG']
+    var image_sorter = new NaturalMergeSort(image_path_array);
+
+    /* initialize jsPsych */
+    var jsPsych = initJsPsych({
+        on_finish: function () {
+            jsPsych.data.displayData();
+        }
+    });
+
+    /* create timeline */
+    var timeline = [];
+
+    /* preload images */
+    var preload = {
+        type: jsPsychPreload,
+        images: image_path_array
+    };
+    timeline.push(preload);
+
+    /* define welcome message trial */
+    var welcome = {
+        type: jsPsychHtmlKeyboardResponse,
+        data: {
+            trial_class: "welcome"
+        },
+        stimulus: `
+        <p style="font-size: 4vh; line-height: 1.5; color: white;">
+            When we look at the world, our brain directs our eyes to certain areas or objects. This makes some items in the world stand out and immediately captures our attention, while ignoring the rest. For example, a red shirt among 20 black shirts, or a single cloud in a blue sky. 
+        </p>
+        <p style="font-size: 4vh; line-height: 1.5; color: white;">
+            You will be presented with 2 images. Select the image that stands out and grabs your attention. Be quick, as each presentation only last 200ms!
+        </p>
+        `
+    };
+
+    /* define main_trial trial */
+    var before_trial_fixation = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `<div id="centre-cross" style="font-size: 10vh; position: absolute; top: 50vh; left: 50vw; transform: translate(-50%, -50%); user-select: none;" draggable="false">+</div>`,
+        choices: "NO_KEYS",
+        data: {
+            trial_class: "before_trial_fixation"
+        },
+        trial_duration: function () {
+            return Math.floor(Math.random() * 300) + 300;
+        }
+    };
+
+    var main_trial = {
+        type: jsPsychHtmlKeyboardResponse,
+        choices: "NO_KEYS",
+        stimulus: function () {
+            // determine left and right image
+            switch (current_trial_type) {
+                case "training_trial":
+                    let randomIndex = Math.floor(Math.random() * image_path_array.length);
+                    var left = image_path_array[randomIndex];
+                    let remainingArray = image_path_array.filter((_, index) => index !== randomIndex);
+                    var right = remainingArray[Math.floor(Math.random() * remainingArray.length)];
+                    break;
+                case "main_trial":
+                    var next = image_sorter.next();
+                    var left = next.left;
+                    var right = next.right;
+                    break;
+                case "repeat_trial":
+                    let trial_data = jsPsych.data.get().filter({ trial_class: "main_trial" }).trials
+                    let random_trial = trial_data[Math.floor(Math.random() * trial_data.length)];
+                    var left = random_trial.left;
+                    var right = random_trial.right;
+                    break
+                default:
+                    throw new Error("Invalid trial type");
+            }
+
+            let position = random_two_positions();
+            let [x1, y1, x2, y2] = position;
+
+            html = `
+            <div id="left-container" style="position: absolute; top: ${y1}px; left: ${x1}px; width: 26vh; height: 26vh; transform: translate(-50%, -50%);">
+            <img id="left-img" src="${left}" style="width: 100%; height: 100%; object-fit: contain; user-select: none;" draggable="false"/>
+            </div>
+            <div id="right-container" style="position: absolute; top: ${y2}px; left: ${x2}px; width: 26vh; height: 26vh; transform: translate(-50%, -50%);">
+            <img id="right-img" src="${right}" style="width: 100%; height: 100%; object-fit: contain; user-select: none;" draggable="false"/>
+            </div>
+            <div id="centre-cross" style="font-size: 10vh; position: absolute; top: 50vh; left: 50vw; transform: translate(-50%, -50%); user-select: none;" draggable="false">+</div>
+            `
+            return html
+        },
+        on_start: function (trial) {
+            trial.startTime = performance.now();
+        },
+        on_load: function () {
+            const leftImg = document.getElementById('left-img');
+            const rightImg = document.getElementById('right-img');
+
+            const handleClick = (e) => {
+                // Get response data
+                const response = {
+                    // rt: performance.now() - startTime,
+                    clicked: e.target.id,
+                    rt: performance.now() - this.startTime,
+                    trial_class: `${current_trial_type}`,
+                };
+
+                // record current left and right image
+                response.left = leftImg.src;
+                response.right = rightImg.src;
+
+                // record img position and cross abs position
+                response.left_position = getElementCenter(leftImg);
+                response.right_position = getElementCenter(rightImg);
+                const cross = document.getElementById('centre-cross');
+                response.cross_position = getElementCenter(cross);
+
+                // update the sorter
+                if (current_trial_type === "main_trial") {
+                    image_sorter.firstIsSmallerOrEqual(e.target.id === 'right-img');
+                }
+
+                // End trial
+                jsPsych.finishTrial(response);
+            };
+
+            setTimeout(() => {
+                leftImg.addEventListener('click', handleClick);
+                rightImg.addEventListener('click', handleClick);
+                leftImg.style.opacity = 0;
+                rightImg.style.opacity = 0;
+                let leftContainer = document.getElementById('left-container');
+                let rightContainer = document.getElementById('right-container');
+                leftContainer.style.border = "5px solid black";
+                rightContainer.style.border = "5px solid black";
+            }, 200);
+        },
+        post_trial_gap: 0
+    };
+
+    var trial_loop = {
+        timeline: [before_trial_fixation, main_trial],
+        on_start: function () {
+            current_trial_type = "main_trial";
+        },
+        loop_function: function () {
+            if (image_sorter.finished) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    };
+
+    var training_loop = {
+        timeline: [before_trial_fixation, main_trial],
+        on_start: function () {
+            current_trial_type = "training_trial";
+        },
+        loop_function: function () {
+            if (jsPsych.data.get().filter({ trial_class: "training_trial" }).count() >= 2) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    };
+
+    var repeat_loop = {
+        timeline: [before_trial_fixation, main_trial],
+        on_start: function () {
+            current_trial_type = "repeat_trial";
+        },
+        loop_function: function () {
+            if (jsPsych.data.get().filter({ trial_class: "repeat_trial" }).count() >= 10) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    };
+
+    var result_generate = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: "Please wait...",
+        data: {
+            trial_class: "generate_result",
+            sorted_array: function () {
+                return image_sorter.result;
+            }
+        },
+        on_start: function () {
+            setTimeout(function () {
+                jsPsych.finishTrial({});
+            }, 400);
+        }
+    }
+
+    var result_display = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function () {
+            let sorted_array = image_sorter.result;
+            return `
+            ${sorted_array.join('<br>')}
+            <p>Press any key to finish the experiment.</p>
+            `
+        },
+        data: {
+            trial_class: "show_sorted"
+        },
+        on_start: function () {
+            // upload data to server
+            const headers = new Headers()
+            headers.append("Content-Type", "application/json")
+
+            const body = jsPsych.data.get().json()
+
+            const options = {
+                method: "POST",
+                headers,
+                mode: "cors",
+                body: JSON.stringify(body),
+            }
+
+            fetch("https://eoa19fdr5dl0c1e.m.pipedream.net", options)
+        }
+    };
+
+    var enter_fullscreen = {
+        type: jsPsychFullscreen,
+        fullscreen_mode: true
+    }
+
+    var exit_fullscreen = {
+        type: jsPsychFullscreen,
+        fullscreen_mode: false
+    }
+
+    timeline.push(welcome);
+    timeline.push(enter_fullscreen);
+    timeline.push(training_loop);
+    timeline.push(trial_loop);
+    timeline.push(repeat_loop);
+    timeline.push(result_generate);
+    timeline.push(result_display);
+    timeline.push(exit_fullscreen);
+
+    /* start the experiment */
+    jsPsych.run(timeline);
+
+</script>
+
+</html>
