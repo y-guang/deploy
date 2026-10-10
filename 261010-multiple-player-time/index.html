@@ -1,0 +1,99 @@
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>当前时间</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 40px;
+      font-size: 28px;
+      line-height: 1.8;
+    }
+    .row {
+      display: flex;
+      gap: 24px;
+    }
+    .name {
+      min-width: 90px;
+      font-weight: 600;
+    }
+    .time {
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body>
+  <div id="clocks"></div>
+
+  <script>
+    const formatterOptions = {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false
+    };
+
+    const clocks = [...new URLSearchParams(location.search)]
+      .map(([name, timeZone]) => {
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const nameElement = document.createElement("span");
+        nameElement.className = "name";
+        nameElement.textContent = name;
+
+        const timeElement = document.createElement("span");
+        timeElement.className = "time";
+
+        row.append(nameElement, timeElement);
+        document.getElementById("clocks").append(row);
+
+        try {
+          // 兼容 UTC+02:00、UTC-05:30 等固定偏移
+          const match = timeZone.match(
+            /^UTC([+-])(\d{1,2})(?::?(\d{2}))?$/i
+          );
+
+          let formatter;
+          let offset = 0;
+
+          if (match) {
+            const [, sign, hours, minutes = "0"] = match;
+            if (+hours > 23 || +minutes > 59) {
+              throw new RangeError("Invalid UTC offset");
+            }
+            offset = (sign === "+" ? 1 : -1) *
+              (+hours * 60 + +minutes) * 60000;
+            timeZone = "UTC";
+          }
+
+          formatter = new Intl.DateTimeFormat("zh-CN", {
+            ...formatterOptions,
+            timeZone
+          });
+
+          return { timeElement, formatter, offset };
+        } catch {
+          timeElement.textContent = "无效时区";
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    function update() {
+      const now = Date.now();
+      for (const { timeElement, formatter, offset } of clocks) {
+        timeElement.textContent = formatter.format(
+          new Date(now + offset)
+        );
+      }
+    }
+
+    update();
+    setInterval(update, 1000);
+  </script>
+</body>
+</html>
